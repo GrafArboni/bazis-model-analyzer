@@ -1,29 +1,29 @@
 {
  "product": "bazis-model-analyzer",
- "build": 2,
+ "build": 3,
  "version": "1.4.1 (18.11.2026)",
  "date": "2026-11-18",
- "notes": "Двойной щелчок по окну (Анализ_модели_UI.exe) проверяет обновления и восстанавливает повреждённые файлы сборки.",
+ "notes": "Онлайн-лицензии: проверка на сервере, отзыв и продление без нового файла, 14 дней без интернета",
  "files": [
   {
    "name": "Анализ модели.js",
-   "sha256": "754900e4a37b4b5d5c0be8770ac8ea3370ed91c4191789f38cfeb27c6451a796",
-   "size": 13768
+   "sha256": "786b5c42e37b0391b0636c92421c22baee129cd18a6b4f60aa42f26388c875f9",
+   "size": 16822
   },
   {
    "name": "Анализ модели.crypt",
-   "sha256": "881360a0f6db469db0d5bad7471a0db2b33e15a5e49cdd5b38608e8e3f4817c8",
+   "sha256": "af9d551e30888d7603b36a7874e05f99444a70dd011936e0b0b900edfaf473f0",
    "size": 231607
   },
   {
    "name": "Анализ_модели_UI.exe",
-   "sha256": "865a1ab90d48de15ffb5e2365ba39de8cb65bdfaf8055b66f5dcbe0087486341",
-   "size": 107008
+   "sha256": "8030b1228c5ea062734d84936baa9433c45eb47f04e5462af610fc0df363cd5f",
+   "size": 107520
   },
   {
    "name": "crypt_svc.exe",
-   "sha256": "41aea4f279911d9dd1e58c3a36524b1a7148ab3fc0106de6586c405e8912663e",
-   "size": 407552
+   "sha256": "db37cd4d6fd59cd58743caddb0b93f8149151a5ed4045461128498f945464a95",
+   "size": 475136
   },
   {
    "name": "viyar_catalog.json",
@@ -32,8 +32,8 @@
   },
   {
    "name": "ПРОЧТИ_МЕНЯ.md",
-   "sha256": "3d028ba93ac1769d52a16aaec7cbfcf4d1258e41f761ffbb3ae37d326d9d73a3",
-   "size": 23801
+   "sha256": "4bb0bfcaa8e438b0ea3250fa608c8ca0206660aef111446a12ebe1e52531e44b",
+   "size": 24689
   }
  ]
 }

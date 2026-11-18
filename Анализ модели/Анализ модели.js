@@ -1,8 +1,9 @@
 ﻿// Анализ модели — загрузчик защищённой сборки.
-// Сам анализ лежит рядом в «Анализ модели.crypt» (AES-256-GCM). Его расшифровывает crypt_svc.exe, и только если рядом
-// есть license.lic — лицензия, выписанная на этот компьютер. Открытый текст на диск не пишется: он приходит по каналу
-// от crypt_svc и исполняется из памяти. Нет лицензии — загрузчик покажет код компьютера, который надо отправить автору.
-var AN_LOADER_BUILD = 2;
+// Сам анализ лежит рядом в «Анализ модели.crypt» (AES-256-GCM). Его расшифровывает crypt_svc.exe: ключа в нём нет —
+// ключ выдаёт сервер лицензий автора по license.lic (лицензия на этот компьютер; срок и отзыв — на сервере).
+// Ответ сервера хранится, и без интернета скрипт работает до 14 дней. Открытый текст на диск не пишется: он приходит
+// по каналу от crypt_svc и исполняется из памяти. Нет лицензии — загрузчик покажет код компьютера для автора.
+var AN_LOADER_BUILD = 3;
 var AN_SCRIPT_DIR = '';
 var AN_LICENSE = null;
 
@@ -134,10 +135,10 @@ var AN_LICENSE = null;
         ch.on('error', function (e3) { fin(-1, e3); });
         ch.on('close', function (code) { fin(code, null); });
         guard = later(function () {
-            trace('crypt_svc не ответил за 20 с — останавливаю');
+            trace('crypt_svc не ответил за 35 с — останавливаю');
             try { ch.kill(); } catch (e4) { }
-            later(function () { fin(-2, new Error('crypt_svc не ответил за 20 секунд')); }, 3000);
-        }, 20000);
+            later(function () { fin(-2, new Error('crypt_svc не ответил за 35 секунд')); }, 3000);
+        }, 35000);
     }
 
     function dateText(unix) {
@@ -165,14 +166,36 @@ var AN_LICENSE = null;
         });
     }
 
+    // Отказы, при которых нужен автор: показать код компьютера. Код ошибки — "[!] E_…:" в stderr crypt_svc.
     function explain(err) {
         var m;
-        if (/срок лицензии ист/.test(err)) {
-            m = /до (\d+)/.exec(err);
-            return 'срок лицензии истёк' + (m ? ' ' + dateText(m[1]) : '') + '.';
+        if (/E_EXPIRED/.test(err)) {
+            m = /until=(\d+)/.exec(err);
+            return 'срок лицензии истёк' + (m && Number(m[1]) > 0 ? ' ' + dateText(m[1]) : '') + '. Напишите автору, чтобы продлить.';
         }
-        if (/не для этой машины/.test(err)) { return 'лицензия выписана на другой компьютер.'; }
-        if (/подпись|формат лицензии|base64|лицензия пуста|нет подписи|payload/.test(err)) { return 'файл лицензии повреждён или не от этой программы.'; }
+        if (/E_REVOKED/.test(err)) { return 'лицензия отозвана автором.'; }
+        if (/E_BLOCKED/.test(err)) { return 'лицензия заблокирована: проверки шли из слишком многих мест. Свяжитесь с автором.'; }
+        if (/E_UNKNOWN/.test(err)) { return 'этой лицензии нет в списке автора.'; }
+        if (/E_DEVICE/.test(err)) { return 'лицензия выписана на другой компьютер.'; }
+        if (/E_OLDLIC/.test(err)) { return 'лицензия старого образца — нужна новая (с онлайн-проверкой).'; }
+        if (/E_BADLIC|E_NOLIC/.test(err)) { return 'файл лицензии повреждён или не от этой программы.'; }
+        return '';
+    }
+    // Отказы, которые человек решает сам (сеть, часы).
+    function explainLocal(err) {
+        var m;
+        if (/E_OFFLINE_STALE/.test(err)) {
+            m = /got=(\d+)/.exec(err);
+            return 'скрипт работал без связи с сервером лицензий 14 дней' + (m ? ' (последняя проверка ' + dateText(m[1]) + ')' : '') + '.' + NL + NL +
+                'Подключите интернет и запустите скрипт снова.';
+        }
+        if (/E_OFFLINE/.test(err)) {
+            m = /\(([^)]*)\)/.exec(err);
+            return 'нет связи с сервером лицензий' + (m ? ' (' + m[1] + ')' : '') + '.' + NL + NL +
+                'Первый запуск и первый запуск после обновления требуют интернета; дальше скрипт работает без сети до 14 дней.' + NL +
+                'Проверьте подключение и запустите снова.';
+        }
+        if (/E_CLOCK/.test(err)) { return 'часы компьютера переведены назад. Поставьте верные дату и время и запустите снова.'; }
         return '';
     }
 
@@ -215,7 +238,9 @@ var AN_LICENSE = null;
                 var why = explain(err);
                 trace('crypt_svc: код ' + code + ' ' + String(err).replace(/\s+/g, ' ') + (e ? ' ' + e.message : ''));
                 if (why) { licenseHelp(dir, svc, why); return; }
-                if (/расшифровка не удалась|не \.crypt|read /.test(err)) {
+                var local = explainLocal(err);
+                if (local) { fail('Анализ модели: ' + local); return; }
+                if (/E_CORRUPT/.test(err)) {
                     fail('Анализ модели: файл «' + CRYPT + '» повреждён или от другой версии.' + NL + NL +
                         'Запустите двойным щелчком «Анализ_модели_UI.exe» из папки скрипта — он проверит и восстановит файлы.');
                     return;
@@ -223,9 +248,16 @@ var AN_LICENSE = null;
                 fail('Анализ модели: не удалось запустить защищённый скрипт.' + NL + NL + (e ? e.message : (err || 'код ' + code)));
                 return;
             }
-            var m = /exp=(\d+)\s+dev=([0-9a-f]+)/.exec(err);
-            if (m) { AN_LICENSE = { exp: Number(m[1]), dev: m[2] }; }
-            trace('расшифровано ' + out.length + ' байт за ' + (Date.now() - t0) + ' мс' + (m ? ', лицензия до ' + dateText(m[1]) : ''));
+            var m = /id=(\w+) until=(\d+) dev=([0-9a-f]+) checked=(\d+) online=(\d) left=(\d+)/.exec(err);
+            if (m) { AN_LICENSE = { id: m[1], exp: Number(m[2]), dev: m[3], checked: Number(m[4]), online: m[5] === '1', left: Number(m[6]) }; }
+            trace('расшифровано ' + out.length + ' байт за ' + (Date.now() - t0) + ' мс' + (m ? ', лицензия ' + m[1] + ' до ' + dateText(m[2]) +
+                (m[5] === '1' ? ', проверена на сервере' : ', без сервера, осталось ' + m[6] + ' дн.') : ''));
+            if (AN_LICENSE && !AN_LICENSE.online && AN_LICENSE.left <= 3) {
+                try {
+                    alert('Анализ модели: нет связи с сервером лицензий с ' + dateText(AN_LICENSE.checked) + '.' + NL +
+                        'Без интернета скрипт проработает ещё ' + AN_LICENSE.left + ' дн. Подключите интернет, чтобы продлить проверку.');
+                } catch (eA) { }
+            }
             var src = out.toString('utf8');
             out = null;
             for (var i = 0; i < timers.length; i++) { try { clearTimeout(timers[i]); } catch (e1) { } }
