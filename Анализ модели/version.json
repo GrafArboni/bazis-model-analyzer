@@ -1,0 +1,39 @@
+{
+ "product": "bazis-model-analyzer",
+ "build": 1,
+ "version": "1.4 (18.11.2026)",
+ "date": "2026-11-18",
+ "notes": "Первая защищённая сборка: лицензия на компьютер, обновления по кнопке, щелчок по детали в модели выделяет её.",
+ "files": [
+  {
+   "name": "Анализ модели.js",
+   "sha256": "500398c6d65374cccbcd58a6076421cfbf06078c945a58348d181a4604272c89",
+   "size": 13768
+  },
+  {
+   "name": "Анализ модели.crypt",
+   "sha256": "6f525f8c2651f6773b331344c5a132771dff3b42d2fdf69449e525c04749aa89",
+   "size": 231603
+  },
+  {
+   "name": "Анализ_модели_UI.exe",
+   "sha256": "2c0cfaa137edfb53e2c8a93ade8029bf272423ffb7907d019d5ecbdbea6848a6",
+   "size": 107008
+  },
+  {
+   "name": "crypt_svc.exe",
+   "sha256": "41aea4f279911d9dd1e58c3a36524b1a7148ab3fc0106de6586c405e8912663e",
+   "size": 407552
+  },
+  {
+   "name": "viyar_catalog.json",
+   "sha256": "d739c4a6caf5b8b991eecdc855bdfcf321f44e8a017f4a63949970d1e73fe84c",
+   "size": 1386981
+  },
+  {
+   "name": "ПРОЧТИ_МЕНЯ.md",
+   "sha256": "3d028ba93ac1769d52a16aaec7cbfcf4d1258e41f761ffbb3ae37d326d9d73a3",
+   "size": 23801
+  }
+ ]
+}
